@@ -3,6 +3,9 @@ datapath = "assets/data/data.csv"
 //define chart area
 var svgWidth = 960;
 var svgHeight = 500;
+// var svgWidth = parseInt(d3.select("#scatter").style("width"));
+// var svgHeight = svgWidth*.5625;
+
 
 var margin = {
   top: 20,
@@ -64,44 +67,65 @@ d3.csv(datapath).then(function(params){
         .call(leftAxis);
 
     //create circles for each data point    
-    var circlesGroup = chartGroup.selectAll("circle")
+    var gGroup = chartGroup.selectAll("circle")
         .data(params)
         .enter();
 
     var radius = 10
-    circlesGroup
+
+    var circlesGroup = gGroup
         .append("circle")
         .classed("stateCircle", true)
         .attr("cx", d => xLinearScale(d.poverty))
         .attr("cy", d => yLinearScale(d.obesity))
-        .attr("r", "10")
+        .attr("r", radius)
         .attr("text",d=>d.abbr);
 
-    circlesGroup    
+    var textGroup = gGroup    
         .append("text")
         .text(d => d.abbr)
         .attr("dx", d => xLinearScale(d.poverty))
         .attr("dy", d => yLinearScale(d.obesity)+radius/3)
         .attr("font-size",radius)
-        .attr("class","stateText")
-        ;
+        .attr("class","stateText");
 
-    
-    // axes titles
+ // axes titles
     chartGroup.append("text")
         .attr("transform", "rotate(-90)")
         .attr("y", 0 - margin.left + 40)
         .attr("x", 0 - (height / 2))
         .attr("dy", "1em")
-        .attr("class", "axisText")
+        .attr("class", "aText")
         .text("Obesity %");
   
     chartGroup.append("text")
         .attr("transform", `translate(${width / 2}, ${height + margin.top + 30})`)
-        .attr("class", "axisText")
+        .attr("class", "aText")
         .text("Poverty %");
 
+    var toolTip = d3.tip()
+        .attr("class", "d3-tip")
+        .offset([80, -60])
+        .html(function(d) {
+          return (`${d.state}<br>Obesity %: ${d.obesity}<br>Poverty %: ${d.poverty}`);
+        });
 
+    chartGroup.call(toolTip);
 
+    circlesGroup.on("click", function(data) {
+        toolTip.show(data, this);
+      })
+        .on("mouseout", function(data, index) {
+        toolTip.hide(data);
+        });
+
+    textGroup.on("click", function(data) {
+        toolTip.show(data, this);
+      })
+        .on("mouseout", function(data, index) {
+        toolTip.hide(data);
+        });
+ 
+   
 
 });
