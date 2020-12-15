@@ -16,7 +16,8 @@ var height = svgHeight - margin.top - margin.bottom;
 
 var svg = d3.select("#scatter").append("svg")
     .attr("height",svgHeight)
-    .attr("width",svgWidth);
+    .attr("width",svgWidth)
+    .classed("chart", true);
 
 var chartGroup = svg.append("g")
     .attr("transform", `translate(${margin.left}, ${margin.top})`);    
@@ -24,28 +25,26 @@ var chartGroup = svg.append("g")
 //import data from csv    
 d3.csv(datapath).then(function(params){
     console.log(params);
-    var medianIncome=[];
+    var poverty=[];
     var obesity=[];
     var abbreviation=[];
 
     //push data into arrays and convert to numbers
     params.forEach(function(data){
-        medianIncome.push(+data.income);
+        poverty.push(+data.poverty);
         obesity.push(+data.obesity);
         abbreviation.push(data.abbr);
     });
 
     //scale axes and create
     
-    var xExtent = d3.extent(medianIncome),
+    var xExtent = d3.extent(poverty),
     xRange = xExtent[1] - xExtent[0];
     var yExtent = d3.extent(obesity),
     yRange = yExtent[1] - yExtent[0];
   
     var xDomain = ([xExtent[0] - (xRange * .10), xExtent[1] + (xRange * .10)]);
     var yDomain = ([yExtent[0] - (yRange * .10), yExtent[1] + (yRange * .10)]);
-    console.log(xExtent)
-    console.log(xDomain)
 
     var xLinearScale = d3.scaleLinear()
         .domain(xDomain)
@@ -67,15 +66,42 @@ d3.csv(datapath).then(function(params){
     //create circles for each data point    
     var circlesGroup = chartGroup.selectAll("circle")
         .data(params)
-        .enter()
+        .enter();
+
+    var radius = 10
+    circlesGroup
         .append("circle")
-        .attr("cx", d => xLinearScale(d.income))
+        .classed("stateCircle", true)
+        .attr("cx", d => xLinearScale(d.poverty))
         .attr("cy", d => yLinearScale(d.obesity))
-        .attr("r", "15")
-        .attr("fill", "blue")
-        .attr("opacity", ".75")
-        .text(d=>d.abbr)
-       
+        .attr("r", "10")
+        .attr("text",d=>d.abbr);
+
+    circlesGroup    
+        .append("text")
+        .text(d => d.abbr)
+        .attr("dx", d => xLinearScale(d.poverty))
+        .attr("dy", d => yLinearScale(d.obesity)+radius/3)
+        .attr("font-size",radius)
+        .attr("class","stateText")
+        ;
+
+    
+    // axes titles
+    chartGroup.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 0 - margin.left + 40)
+        .attr("x", 0 - (height / 2))
+        .attr("dy", "1em")
+        .attr("class", "axisText")
+        .text("Obesity %");
+  
+    chartGroup.append("text")
+        .attr("transform", `translate(${width / 2}, ${height + margin.top + 30})`)
+        .attr("class", "axisText")
+        .text("Poverty %");
+
+
 
 
 });
